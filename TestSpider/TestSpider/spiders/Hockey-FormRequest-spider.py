@@ -6,6 +6,7 @@ class LoginSpider(scrapy.Spider):
     start_urls = ["https://www.scrapethissite.com/pages/forms/"]
 
     def parse(self, response):
+        # Автоматически заполняем форму текстом New York
         return scrapy.FormRequest.from_response(
             response,
             formdata={"q": "New York"},
@@ -13,9 +14,13 @@ class LoginSpider(scrapy.Spider):
         )
 
     def after_form_request(self, response):
+        # Ходим по всем ссылкам пагинации
         pagination_links = response.xpath("//ul[contains(@class, 'pagination')]/li/a/@href")
         yield from response.follow_all(pagination_links, self.after_form_request)
+
+        # Если в ссылке нет параметра page_num, то игнорируем ее
         if 'page_num' in response.url:
+            # Собираем данные о командах
             teams = response.xpath("//tr[contains(@class, 'team')]")
 
             for team in teams:
